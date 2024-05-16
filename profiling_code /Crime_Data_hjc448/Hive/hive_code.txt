@@ -1,0 +1,44 @@
+1. Check if there is any table
+SHOW tables;
+DESCRIBE crime_data;
+
+2. Create crime_data table
+CREATE EXTERNAL TABLE IF NOT EXISTS crime_data (
+    `Borough` STRING,
+    `Date` STRING,
+    `Time` STRING,
+    `Level_of_Offense` STRING,
+    `Location_Description` STRING,
+    `PD_DESC` STRING,
+    `X_coordinate` INT,
+    `Y_coordinate` INT,
+    `Latitude` DOUBLE,
+    `Longitude` DOUBLE,
+    `Lat_Lon` STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE;
+
+3. Check again if it worked or not
+DESCRIBE crime_data;
+
+4. Import crime_data;
+LOAD DATA INPATH 'hdfs://nyu-dataproc-m/user/hjc448_nyu_edu/NYC_crime_cleaned.csv’ INTO TABLE crime_data;
+
+5. Check if it was imported correctly
+SELECT * from crime_data;
+
+6. Query to count crimes by level of offenses
+
+SELECT `Level_of_Offense`, COUNT(*) as Total_Crimes
+FROM crime_data
+GROUP BY `Level_of_Offense`
+ORDER BY Total_Crimes DESC;
+
+7. Query crime_Data analysis on monthly bases
+
+SELECT CONCAT(SPLIT(`Date`, '/')[0], '-', SPLIT(`Date`, '/')[2]) AS Month_Year, COUNT(*) AS Total_Crimes
+FROM crime_data
+GROUP BY CONCAT(SPLIT(`Date`, '/')[0], '-', SPLIT(`Date`, '/')[2])
+ORDER BY Month_Year;

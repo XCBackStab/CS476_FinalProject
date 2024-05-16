@@ -1,0 +1,23 @@
+hjc448 Daniel Cho
+
+spark-shell --deploy-mode client -i  CrimeDataCleanup.scala
+
+:load CrimeDataCleanup.scala
+
+
+val spark = SparkSession.builder()
+  .appName("Interactive Crime Data Cleanup")
+  .master("local[4]")  // Running locally with 4 cores
+  .getOrCreate()
+
+CrimeDataCleanup.main(Array.empty)  
+
+#download it locally
+hdfs dfs -get /user/hjc448_nyu_edu/NYC_crime_cleaned/part-00000-07303398-d51a-4307-a86f-315e8fd775e3-c000.csv ./NYC_crime_cleaned.csv
+
+# put it back in
+
+hdfs dfs -put NYC_crime_cleaned.csv
+
+# lastly relocate this file to final_project_dir
+hdfs dfs -mv /user/hjc448_nyu_edu/NYC_crime_cleaned.csv /user/hjc448_nyu_edu/final_project_dir

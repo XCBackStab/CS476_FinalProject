@@ -1,0 +1,39 @@
+hjc448 Daniel Cho
+
+Used scala to dataclean file NYC_crime
+
+Modified NYC_crime Data
+
+First - removed all the columns not needed for our data 
+columns index that we didn't need was 
+0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 35, 36, 37, 38, 39, 40
+
+Second - renamed the columns to make it easier access
+'BORO_NM': 'Borough',
+    'CMPLNT_FR_DT': 'Date',
+    'CMPLNT_FR_TM': 'Time',
+    'LAW_CAT_CD': 'Level of Offense',
+    "PD_DESC", "Crime Description"
+    'LOC_OF_OCCUR_DESC': 'Location Description',
+    'X_COORD_CD': 'X coordinate',
+    'Y_COORD_CD': 'Y coordinate',
+    'Latitude': 'Latitude',
+    'Longitude': 'Longitude',
+    'Lat_Lon': 'Lat_Lon'
+
+Third in our Borough list - Make it just capitalize the first 
+crime['Borough'] = crime['Borough'].str.lower().str.capitalize()
+crime['Borough'] = crime['Borough'].str.replace('Staten island', 'Staten Island', case=False)
+
+Fourth reorder it in this this order
+"Borough", "Date", "Time","Level of Offense", "Location Description", "Crime Description", "Latitude", "Longitude", "Lat_Lon"
+
+Finally output it with csv
+ val outputFilePath = "NYC_crime_cleaned"
+    reorderedDf.write.option("header", "true").csv(outputFilePath)
+
+Check from hdfs dfs -ls to see it was outputted
+
+use hdfs dfs -get function to downlaod it
+
+get the NYC_crime_cleaned.csv file 

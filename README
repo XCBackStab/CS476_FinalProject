@@ -1,0 +1,478 @@
+# Analysis of the Relationship between NYC Crime and Park Events in 2023
+
+## Authors
+
+- Daniel Cho (hjc448)
+- Avery Wang (xw2207)
+
+## Project Description
+
+This project aims to explore how various public park events (e.g., parades, concerts, sports, festivals) affect crime rates in New York City. We will leverage big data technologies such as MapReduce, Hive, and Spark to process and analyze vast amounts of data from NYC’s public events and crime reports. By integrating and examining datasets from NYC OpenData (NYC-crimrate, NYC-publicevent), we seek to identify patterns, correlations, and fluctuations in crime rates.
+
+The directory structure is shown here:
+
+FinalProject/
+├── ana_code/
+│   └── analytics/
+│       ├── pyspark_dp_clean.py
+│       └── Screenshot
+├── data_ingest/
+│   ├── crime_data/
+│   │   ├── NYC_crime_cleaned.csv
+│   │   └── NYC_crime.csv
+│   └── event_data/
+│       ├── event_nyc.csv
+│       └── final_data.csv
+├── ETL_code/
+│   ├── crime_data_hjc448/
+│   │   ├── CrimeDataCleanup.scala
+│   │   ├── clean.txt 
+│   │   ├── runningScala.txt
+│   │   └── Screenshot
+│   └── event_data_xw2207/
+│       ├── pyspark_cleaning_code.py
+│       └── Screenshot
+├── profiling code/
+│   ├── Crime_Data_hjc448/
+│   │   ├── Hive/
+│   │   │   ├── Hive_code.txt
+│   │   │   └── Screenshot
+│   │   └── MapReduce/
+│   │       ├── compile.sh
+│   │       ├── CrimeDriver.class
+│   │       ├── crimeDriver.jar
+│   │       ├── CrimeDriver.java
+│   │       ├── CrimeMapper.class
+│   │       ├── CrimeMapper.java
+│   │       ├── CrimeReducer.class
+│   │       ├── CrimeReducer.java
+│   │       └── Screenshot
+│   └── Event_Data_xw2207/
+│       ├── Hive/
+│       │   ├── Hive.txt
+│       │   └── Screenshot
+│       └── MapReduce/
+│           ├── Screentshot
+│           ├── BoroughMapper.java
+│           ├── BoroughMapper.class
+│           ├── BoroughReducer.java
+│           ├── BoroughReducer.class
+│           ├── Borough.java
+│           ├── Borough.class
+│           └── Borough.jar
+├── data_joining/
+│   ├── combine.scala
+│   ├── screenshot
+│   └── final_combine.csv
+└── README
+
+
+## ana_code
+The analysis for the merged dataset uses Pyspark to analyze information about various events and associated crimes. The analysis focuses on counting the number of crimes by event type and specifically counts felony occurrences.
+
+To run the code use: spark-submit --deploy-mode client --executor-memory 4G --total-executor-cores 4  pyspark_dp_clean.py
+The result in the screenshot counts the crime count for various  types of events that occurred in NYC in 2023, as well as the number of felonies that occurred during those events.
+
+Screenshot of the result is inside `ana_code/Screenshot` folder. 
+
+## Data_ingest
+
+###NYC Crime Dataset:
+
+Upload the original datasets into NYU Dataproc, and use the code below to place them into the home directory
+
+hdfs dfs -put NYC_crime.csv
+
+Data Originally used for the NYC crime is `NYC_crime.csv`, which does the query to extract and has the following schema:
+
+root
+ |-- CMPLNT_NUM: string (nullable = true)
+ |-- ADDR_PCT_CD: integer (nullable = true)
+ |-- BORO_NM: string (nullable = true)
+ |-- CMPLNT_FR_DT: timestamp (nullable = true)
+ |-- CMPLNT_FR_TM: string (nullable = true)
+ |-- CMPLNT_TO_DT: timestamp (nullable = true)
+ |-- CMPLNT_TO_TM: string (nullable = true)
+ |-- CRM_ATPT_CPTD_CD: string (nullable = true)
+ |-- HADEVELOPT: string (nullable = true)
+ |-- HOUSING_PSA: integer (nullable = true)
+ |-- JURISDICTION_CODE: integer (nullable = true)
+ |-- JURIS_DESC: string (nullable = true)
+ |-- KY_CD: integer (nullable = true)
+ |-- LAW_CAT_CD: string (nullable = true)
+ |-- LOC_OF_OCCUR_DESC: string (nullable = true)
+ |-- OFNS_DESC: string (nullable = true)
+ |-- PARKS_NM: string (nullable = true)
+ |-- PATROL_BORO: string (nullable = true)
+ |-- PD_CD: integer (nullable = true)
+ |-- PD_DESC: string (nullable = true)
+ |-- PREM_TYP_DESC: string (nullable = true)
+ |-- RPT_DT: timestamp (nullable = true)
+ |-- STATION_NAME: string (nullable = true)
+ |-- SUSP_AGE_GROUP: string (nullable = true)
+ |-- SUSP_RACE: string (nullable = true)
+ |-- SUSP_SEX: string (nullable = true)
+ |-- TRANSIT_DISTRICT: integer (nullable = true)
+ |-- VIC_AGE_GROUP: string (nullable = true)
+ |-- VIC_RACE: string (nullable = true)
+ |-- VIC_SEX: string (nullable = true)
+ |-- X_COORD_CD: integer (nullable = true)
+ |-- Y_COORD_CD: integer (nullable = true)
+ |-- Latitude: double (nullable = true)
+ |-- Longitude: double (nullable = true)
+ |-- Lat_Lon: point (nullable = true)
+
+The cleaned data for the event is in the `data_ingest/crime_data` named `NYC_crime_cleaned.csv`
+
+
+###NYC Event Dataset:
+Upload the original datasets into NYU Dataproc, and use the codes below to place them into home directory 
+hdfs dfs -put event_nyc.csv
+Data originally used for the NYC event is `event_nyc.csv`, which does the query to extract, which has the schema:
+
+root
+ |-- Event ID: string (nullable = true)
+ |-- Event Name: string (nullable = true)
+ |-- Start Date/Time: string (nullable = true)
+ |-- End Date/Time: string (nullable = true)
+ |-- Event Agency: string (nullable = true)
+ |-- Event Type: string (nullable = true)
+ |-- Event Borough: string (nullable = true)
+ |-- Event Location: string (nullable = true)
+ |-- Event Street Side: string (nullable = true)
+ |-- Street Closure Type: string (nullable = true)
+ |-- Community Board: string (nullable = true)
+ |-- Police Precinct: string (nullable = true)
+
+The cleaned data for the event is in the `data_ingest/event_data` named `final_data.csv`
+The project for the Event dataset initially uses Pyspark to read the file.
+
+
+## Data Cleaning
+
+All the code for Data Cleaning Purposes is under `Final_Project/ETL_code`. The work was done by two different group members - NYC crime is under the subdirectory `crime_data_hjc448`, and NYC event is underneath `event_data_xw2207`. Inside each folder, the codes and screenshots of the dataproc are provided.
+
+### Data Cleaning Part One - NYC Crime Data
+
+The data cleaning process for the NYC crime dataset involved several steps to refine the information and prepare it for analysis:
+
+1. **Column Removal:** Unnecessary columns were removed to focus on relevant data. The indices of the removed columns are:
+   - 0, 1, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 35, 36, 37, 38, 39, 40
+
+2. **Renaming Columns:** Columns were renamed for easier access:
+   - `BORO_NM` to `Borough`
+   - `CMPLNT_FR_DT` to `Date`
+   - `CMPLNT_FR_TM` to `Time`
+   - `LAW_CAT_CD` to `Level of Offense`
+   - `PD_DESC` to `Crime Description`
+   - `LOC_OF_OCCUR_DESC` to `Location Description`
+   - Coordinates and geographic information were appropriately labeled.
+
+3. **Standardizing Text:** Borough names were capitalized correctly to maintain consistency:
+   - Example transformation: `staten island` to `Staten Island`
+
+4. **Reordering Columns:** The columns were reordered to enhance the dataset’s readability:
+   - Order: "Borough", "Date", "Time", "Level of Offense", "Location Description", "Crime Description", "Latitude", "Longitude", "Lat_Lon"
+
+5. **Exporting Cleaned Data:** The cleaned data was exported to a CSV file:
+   - Output file path: `NYC_crime_cleaned`
+   - The data frame was written with headers and saved as CSV using Spark DataFrame capabilities.
+
+#### Validation and Retrieval
+
+- **Validation:** Check the successful creation of the output file using Hadoop command:
+  ```bash
+  hdfs dfs -ls
+  ```
+- **Retrieval:** Download the cleaned CSV file using Hadoop:
+  ```bash
+  hdfs dfs -get NYC_crime_cleaned.csv
+  ```
+
+#### Running the Scala Program on Google Cloud Dataproc
+
+This section details the steps required to run the Scala program for crime data cleanup on Google Cloud Dataproc.
+
+##### Setting Up the Spark Session
+
+1. **Start the Spark Shell:**
+   Open the Spark shell in client deploy mode with the command:
+   ```bash
+   spark-shell --deploy-mode client
+   ```
+
+2. **Load the Scala Script:**
+   Inside the Spark shell, load the Scala script `CrimeDataCleanup.scala`:
+   ```scala
+   :load CrimeDataCleanup.scala
+   ```
+
+##### Executing the Cleanup Script
+
+1. **Initialize Spark Session:**
+   Set up the Spark session within the shell:
+   ```scala
+   val spark = SparkSession.builder()
+     .appName("Interactive Crime Data Cleanup")
+     .master("local[4]")  // Running locally with 4 cores
+     .getOrCreate()
+   ```
+
+2. **Run the Script:**
+   Execute the cleanup script using the main function:
+   ```scala
+   CrimeDataCleanup.main(Array.empty)
+   ```
+
+##### Managing Data with HDFS
+
+1. **Download the Cleaned Data:**
+   Retrieve the cleaned data file from HDFS to your local system:
+   ```bash
+   hdfs dfs -get /user/hjc448_nyu_edu/NYC_crime_cleaned/part-00000-07303398-d51a-4307-a86f-315e8fd775e3-c000.csv ./NYC_crime_cleaned.csv
+   ```
+
+2. **Upload the Cleaned Data:**
+   Once any necessary local modifications are done, put the cleaned data back into HDFS:
+   ```bash
+   hdfs dfs -put NYC_crime_cleaned.csv
+   ```
+
+3. **Move to Project Directory:**
+   Finally, move the cleaned data file to the final project directory in HDFS:
+   ```bash
+   hdfs dfs -mv /user/hjc448_nyu_edu/NYC_crime_cleaned.csv /user/hjc448_nyu_edu/final_project_dir
+   ```
+
+All the processes and results are underneath the folder Final_Project/ETL_code/crime_data_hjc448/Screenshot
+
+### Data Cleaning Part Two- NYC Public Events
+
+The code is written in Pyspark, and the cleaning is mostly done from the following perspectives:
+
+Step 1: drop certain rows/columns. The missing values in each field are first examined, with the columns "Event Street Side" and "Street Closure Type" being removed because the majority of them are missing. The columns "Community Board" and "Police Precinct" are also dropped, as their values have very little practical importance.
+
+Step 2: Based on our future purpose of using the date to do analyses, each column in the dataset only spans one day, from start to finish. So, just one of these two columns remains. Here the End Date/Time is utilized and implemented Timestamp to convert to 24 24-hour clock time, and then returned to the string time with the format "End Date/Time", "MM/dd/yyyy HH:mm:ss".  
+
+Step 3: An additional column is added by splitting the End Date/Time to get the date only.
+
+Step 4: In this dataset, only the type of the event agency classified as Park Department is utilized, and the column of "Event Location" is also split by: to leave just the park name.
+
+step 5: The data is then processed by grouping it based on event agency, date, event type, borough, and event location, taking the first occurrence of the event name.
+
+The whole process of cleaning data is written in the Pyspark code, named pyspark_cleaning_code.py. To execute the code the necessary the command line is:
+spark-submit --deploy-mode client --executor-memory 4G --total-executor-cores 4  pyspark_cleaning_code.py
+
+The cleaned data is written to final_cleaned, with the command line: 
+hdfs dfs -get /user/xw2207_nyu_edu/final_cleaned/part-00000-df08156d-f7bf-4eb3-a4ca-0df402468a23-c000.csv ./final_data.csv
+
+And then the `final_data.csv` is downloaded and uploaded into the `event_data_xw2207` folder.
+
+The screenshot in the folder /FinalProject/ETL_code/event_data_xw2207/Screenshot includes:
+
+    - The dataset before cleaning and some basic profiling of the data including the Event Agency Count vs Event, Distinct type of Event Agency, Event type, and Borough
+    - It also includes changes to the dataset during the data cleaning process where the Date column is added, time is converted to 24 24-hour clock-time, some columns are dropped and the change on Event  Agency and 	Event location
+    - The cleaned dataset 
+    - Give permission to hjc448_nyu_edu and class instructors
+
+
+## Data Profiling
+
+### Analyzing NYC Crime Data Using MapReduce and Hive
+
+#### MapReduce Analysis
+
+**Objective**: Analyze the relationship between boroughs and crime rates.
+
+1. **Preparation**:
+   - Upload `CrimeMapper.java`, `CrimeReducer.java`, and `CrimeDriver.java` to the HDFS system.
+
+2. **Compilation**:
+   - Compile the Java programs using `compile.sh`.
+   - Create a JAR package with the compiled classes:
+     ```bash
+     jar -cvf crimeDriver.jar *.class
+     ```
+
+3. **Execution**:
+   - Run the MapReduce job on the Hadoop cluster:
+     ```bash
+     hadoop jar crimeDriver.jar CrimeDriver /path/to/NYC_crime_cleaned.csv /path/to/final_project_output
+     ```
+
+4. **Results**:
+   - The results are stored under the `final_project_output` folder.
+   - Screenshots and detailed results can be found in the folder `profiling_code/Crime_Data_hjc448/MapReduce/Screenshot`
+
+#### Hive Analysis
+
+**Objective1**: Examine the types of offenses per crime rate.
+**Objective2**: Examine the crime rates by month.
+
+
+1. **Environment Check**:
+   - Verify existing tables:
+     ```sql
+     SHOW tables;
+     DESCRIBE crime_data;
+     ```
+
+2. **Table Creation**:
+   - Create the `crime_data` table in Hive:
+     ```sql
+     CREATE EXTERNAL TABLE IF NOT EXISTS crime_data (
+         `Borough` STRING,
+         `Date` STRING,
+         `Time` STRING,
+         `Level_of_Offense` STRING,
+         `Location_Description` STRING,
+         `Crime Description` STRING,
+         `X_coordinate` INT,
+         `Y_coordinate` INT,
+         `Latitude` DOUBLE,
+         `Longitude` DOUBLE,
+         `Lat_Lon` STRING
+     )
+     ROW FORMAT DELIMITED
+     FIELDS TERMINATED BY ','
+     STORED AS TEXTFILE;
+     ```
+
+3. **Data Loading**:
+   - Import the cleaned crime data into the Hive table:
+     ```sql
+     LOAD DATA INPATH 'hdfs://nyu-dataproc-m/user/hjc448_nyu_edu/NYC_crime_cleaned.csv' INTO TABLE crime_data;
+     ```
+
+4. **Data Validation**:
+   - Confirm the data was loaded correctly:
+     ```sql
+     SELECT * FROM crime_data;
+     ```
+
+5. **Query Execution**:
+   - Analyze crime rates by the level of offenses:
+     ```sql
+     SELECT `Level_of_Offense`, COUNT(*) AS Total_Crimes
+     FROM crime_data
+     GROUP BY `Level_of_Offense`
+     ORDER BY Total_Crimes DESC;
+     ```
+   - Monthly crime rate analysis:
+     ```sql
+     SELECT CONCAT(SPLIT(`Date`, '/')[0], '-', SPLIT(`Date`, '/')[2]) AS Month_Year, COUNT(*) AS Total_Crimes
+     FROM crime_data
+     GROUP BY CONCAT(SPLIT(`Date`, '/')[0], '-', SPLIT(`Date`, '/')[2])
+     ORDER BY Month_Year;
+     ```
+
+6. **Results Documentation**:
+   - Results will be stored under the `final_project` folder.
+   - Screenshots and analysis are located in `profiling_code/Crime_Data_hjc448/Hive/Screenshot`.
+
+
+### Data Profiling 2: Analyzing NYC Event Data Using MapReduce and Hive
+
+#### MapReduce Analysis:
+The MapReduce here is mainly used to analyze the event counts based on different boroughs in NYC. And the file is prepared as BoroughMapper.java, BoroughReducer.java, and Borough.java
+Here are the steps to run the MapReduce code: 
+     //make the files 
+     1. javac -classpath `yarn classpath` -d . BoroughMapper.java 
+     2. javac -classpath `yarn classpath` -d . BoroughReducer.java 
+     3. javac -classpath `yarn classpath`:. -d . Borough.java 
+     4. jar -cvf Borough.jar *.class
+     5. hdfs dfs -rm -r -f final_dir // this should be checked if the directory already exists
+
+     // use the final_cleaned directory that the data clean step gives as the output, run on the MapReduce files, and then store in the final_dir 
+     6. hadoop jar Borough.jar Borough  final_cleaned  final_dir
+
+     //check the final_dir directory
+     7. hdfs dfs -ls final_dir
+
+     //as I aggregated the result into one single file, the command here shows the overall MapReduce analysis :
+     8. hdfs dfs -cat final_dir/part-r-00000
+
+The screenshots in the `/profiling_code/Event_data_xw2207/MapReduce/Screenshot` shows the result of MapReduce based on the events count vs. boroughs in NYC.
+Besides, it also shows the steps to give directory permissions to the instructors
+
+
+#### Hive Analysis:
+The objective of the Hive study is to determine how many events occur in NYC in each month of 2023. And the Hive file is written in hive.txt, found in the directory:/FinalProject/profiling_code/Event_data_xw2207/Hive/hive.txt
+
+The logic and the command line of running the hive analysis:
+Step 1: Copy the directory and use the copied one as the input to run the Hive analysis:
+hdfs dfs -cp /user/xw2207_nyu_edu/final_cleaned /user/xw2207_nyu_edu/final_cleaned_forhive
+
+Step 1: beeline -u jdbc:hive2://localhost:10000
+Step 2: use xw2207_nyu_edu;
+Step 3: Create the table.
+        -The code starts by ensuring any existing events table is dropped before creating a new external table. This table is structured to capture information about events, specifically tailored to the dataset 	cleaned in the previous step
+Run: 
+
+'''
+CREATE EXTERNAL TABLE events (
+    Borough STRING,
+    DateEvent STRING,
+    Name STRING,
+    EventType STRING,
+    EventAgency STRING,
+    EventLocation STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ',' 
+STORED AS TEXTFILE
+LOCATION 'hdfs://nyu-dataproc-m/user/xw2207_nyu_edu/events_output'
+TBLPROPERTIES ("skip.header.line.count"="1");
+'''
+
+DESCRIBE events; // used to check if the table created successfully 
+
+Step 4: load the data 
+LOAD DATA INPATH '/user/xw2207_nyu_edu/final_cleaned_forhive' INTO TABLE events;
+
+Step 5: Query
+The final query in the script transforms the DateEvent into a more readable format (MM-YYYY) and calculates the total number of events for each month and year combination. 
+Results are ordered by the month and year for easy chronological analysis.
+
+Run:
+
+'''
+SELECT CONCAT(SPLIT(DateEvent, '/')[0], '-', SPLIT(DateEvent, '/')[2]) AS Month, COUNT(*) AS Total_Events
+FROM events
+GROUP BY CONCAT(SPLIT(DateEvent, '/')[0], '-', SPLIT(DateEvent, '/')[2])
+ORDER BY Month;
+'''
+
+The results are in the screenshot folder under Event_data_xw2207/Hive. 
+      
+
+## Data Joining
+"As the primary objective of our project is to analyze the way events might affect the crime in NYC, it is essential to join the datasets once they have undergone data cleaning and profiling.
+
+The code to merge the data is written in combine.scala, in this project, the codes are executed by each line, not by the data as a whole, and the steps are listed here:
+
+Step 1: Get files ready:
+Access the crime data after cleaning using the command here:
+hdfs dfs -get hdfs://nyu-dataproc-m/user/hjc448_nyu_edu/final_project_dir/NYC_crime_cleaned.csv
+hdfs dfs -put NYC_crime_cleaned.csv
+
+Step 2: Start Spark REPL
+spark-shell --deploy-mode client
+
+Step 3: Read two datasets:
+val data1 = spark.read.option("header", "true").csv("final_cleaned")
+val data2 = spark.read.option("header", "true").csv("NYC_crime_cleaned.csv")
+
+Step 4: Strip the columns to avoid the case that empty space bring unmatch
+val data1_stripped = data1.columns.foldLeft(data1) { (df, columnName) => df.withColumn(columnName, trim(col(columnName)))}
+val data2_stripped = data2.columns.foldLeft(data2) { (df, columnName) =>df.withColumn(columnName, trim(col(columnName)))}
+
+Step 5:Data Joining, performs an inner join on both DataFrames based on 'Borough' and 'Date' to combine relevant records.
+val result = data1_stripped.select("Borough", "Date", "Event Type", "Event Location").join(data2_stripped.select("Borough", "Date", "Level of Offense", "Crime Description"),Seq("Borough", "Date"),"inner")
+
+Step 6: Duplicate Removal: Drops duplicate records based on 'Borough', 'Date', 'Level of Offense', and 'Crime Description'.
+val result_unique = result.dropDuplicates(Seq("Borough", "Date", "Level of Offense", "Crime Description"))
+
+Step 7: write into the merge_dataset
+The screenshot in the image here shows the sample dataset after joining, and the permission to partner and instructors. 
+The directory in our folder to see the result is /Final Project/data_joining/Screenshot and the /Final Project/data_joining/final_combine.csv is the dataset after joining. 

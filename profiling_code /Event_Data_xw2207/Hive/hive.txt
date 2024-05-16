@@ -1,0 +1,25 @@
+DROP TABLE IF EXISTS events;
+
+CREATE EXTERNAL TABLE events (
+    Borough STRING,
+    DateEvent STRING,
+    Name STRING,
+    EventType STRING,
+    EventAgency STRING,
+    EventLocation STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ',' 
+STORED AS TEXTFILE
+LOCATION 'hdfs://nyu-dataproc-m/user/xw2207_nyu_edu/events_output'
+TBLPROPERTIES ("skip.header.line.count"="1");
+
+
+DESCRIBE events;
+
+LOAD DATA INPATH '/user/xw2207_nyu_edu/final_cleaned_forhive' INTO TABLE events;
+
+SELECT CONCAT(SPLIT(DateEvent, '/')[0], '-', SPLIT(DateEvent, '/')[2]) AS Month, COUNT(*) AS Total_Events
+FROM events
+GROUP BY CONCAT(SPLIT(DateEvent, '/')[0], '-', SPLIT(DateEvent, '/')[2])
+ORDER BY Month;
